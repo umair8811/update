@@ -1018,129 +1018,63 @@ def get_Package_images():
 #     return {"Event": created_event}
 
 
-def check_event_exists(profile_id: int, event_date: str):
-    conn = sqlite3.connect('event_management.db', timeout=10)
-    cursor = conn.cursor()
-    
-    cursor.execute("""
-    SELECT event_id FROM Events 
-    WHERE profile_id = ? AND start_date <= ? AND end_date >= ?
-    """, (profile_id, event_date, event_date))
-    
-    result = cursor.fetchone()
-    conn.close()
-    
-    return result
 
-
-@app.post("/Create_Book_Event")
-async def Create_Book_Event(event: Events):
+@app.post("/Create_Book_Event", status_code=status.HTTP_201_CREATED)
+def create_book_event(event: Event):
     conn = sqlite3.connect('event_management.db', timeout=10)
     cursor = conn.cursor()
 
-    # Check if event already exists for the same date
-    event_exists = check_event_exists(event.profile_id, event.start_date.strftime("%Y-%m-%d"))
-
-    if event_exists:
-        # Event already exists, update the event
-        cursor.execute("""
-        UPDATE Events
-        SET event_name = ?, number_of_guests = ?, package_id = ?, start_date = ?, end_date = ?, user_id = ?, profile_id = ?, location = ?
-        WHERE event_id = ?
-        """, (
-            event.event_name, event.number_of_guests, event.package_id,
-            event.start_date.strftime("%Y-%m-%d"), event.end_date.strftime("%Y-%m-%d"),
-            event.user_id, event.profile_id, event.location, event_exists[0]
-        ))
-        conn.commit()
+    # Check for conflicting event dates
+    cursor.execute(
+        """
+        SELECT COUNT(*) FROM Events
+        WHERE (start_date <= ? AND end_date >= ?) OR (start_date <= ? AND end_date >= ?)
+        """,
+        (event.start_date, event.start_date, event.end_date, event.end_date)
+    )
+    if cursor.fetchone()[0] > 0:
         conn.close()
-        return {"message": "Event updated successfully"}
-    else:
-        # Event does not exist, create new event
-        cursor.execute("""
+        raise HTTPException(status_code=400, detail="Selected date slot is already booked.")
+
+    cursor.execute(
+        """
         INSERT INTO Events (event_name, number_of_guests, package_id, start_date, end_date, user_id, profile_id, location)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            event.event_name, event.number_of_guests, event.package_id,
-            event.start_date.strftime("%Y-%m-%d"), event.end_date.strftime("%Y-%m-%d"),
-            event.user_id, event.profile_id, event.location
-        ))
-        conn.commit()
+        """,
+        (event.event_name, event.number_of_guests, event.package_id, event.start_date, event.end_date, event.user_id, event.profile_id, event.location)
+    )
 
-        # Get the newly created event ID
-        event_id = cursor.lastrowid
-        conn.close()
+    event_id = cursor.lastrowid
+    cursor.execute("SELECT * FROM Events WHERE event_id = ?", (event_id,))
+    row = cursor.fetchone()
 
-        return {"message": "Event created successfully", "event_id": event_id}
+    keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id', 'profile_id', 'location', 'payment_status']
+    created_event = dict(zip(keys, row))
+
+    conn.commit()
+    conn.close()
+
+    return {"Event": created_event}
 
 
-@app.get("/available_dates/{profile_id}")
-async def Available_Dates(profile_id: int):
+
+@app.get("/Book_Event")
+def get_booked_events():
     conn = sqlite3.connect('event_management.db', timeout=10)
     cursor = conn.cursor()
-
-    # Get all the existing events for the vendor
-    cursor.execute("""
-    SELECT start_date, end_date FROM Events WHERE profile_id = ?
-    """, (profile_id,))
-    
-    events = cursor.fetchall()
-    
-    # Logic to calculate available dates, assuming we have a predefined calendar range (this part can be customized)
-    all_dates = set([str(date) for date in pd.date_range("2025-01-01", "2025-12-31")])
-    booked_dates = set([event[0] for event in events] + [event[1] for event in events])
-    
-    available_dates = list(all_dates - booked_dates)
-    
+    cursor.execute("SELECT * FROM Events")
+    res = cursor.fetchall()
     conn.close()
-    return {"available_dates": available_dates}
+
+    if not res:
+        raise HTTPException(status_code=404, detail="No events found.")
+
+    keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id', 'profile_id', 'location', 'payment_status']
+    booked_events = [dict(zip(keys, item)) for item in res]
+
+    return {"Booked_Events": booked_events}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Get Book Event
-@app.get("/Book_Event")
-def Book_Event():  
-    error_list = []
-    executor = ThreadPoolExecutor()
-    def fetch_Book_Event_data():
-        try:
-            conn = sqlite3.connect('event_management.db', timeout=10) 
-            cursor = conn.cursor()
-            res = cursor.execute(""" Select * from `Events` """)
-            res =cursor.fetchall();
-            if not res:
-               error_list.append("No users found in the database.")
-            #raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-            keys = ['event_id','event_name','number_of_guests','package_id','start_date','end_date','user_id','profile_id','location','payment_status']
-            profile_dict_list = [dict(zip(keys, item)) for item in res]
-        except Exception as e:
-            error_list.append(f"An error occurred: {str(e)}")
-        #raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
-        finally:
-            conn.commit()
-            conn.close()
-            return profile_dict_list
-    future = executor.submit(fetch_Book_Event_data)
-    Book_Event_dict_list = future.result()
-
-    # Check if there were any errors
-    if error_list:
-        return {"errors": error_list}
-  
-    return {"Book_Events ":Book_Event_dict_list}
 
 
 @app.get("/Booked_Events/{user_id}")
