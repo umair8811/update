@@ -1,9 +1,6 @@
 from db_connection import *
 from functions import *
 from BaseModels import *
-from datetime import datetime 
-from models import Event  
-
 import json
 
 from fastapi import status,FastAPI,HTTPException,Depends,Query
@@ -45,36 +42,8 @@ def users_type():
         return {"errors": error_list}
   
     return {"user_type_detail": user_dict_list}
-# @app.get("/users_type")
-# def users_type():  
-#     error_list = []
-#     executor = ThreadPoolExecutor()
-#     def fetch_users_type_data():
-#         try:
-#             conn = sqlite3.connect('event_management.db', timeout=10) 
-#             cursor = conn.cursor()
-#             res = cursor.execute(""" Select * from `User_Type` """)
-#             res =cursor.fetchall();
-#             if not res:
-#                error_list.append("No users found in the database.")
-#             #raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-#             keys = ['user_type_id','user_type']
-#             user_dict_list = [dict(zip(keys, item)) for item in res]
-#         except Exception as e:
-#             error_list.append(f"An error occurred: {str(e)}")
-#         #raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
-#         finally:
-#             conn.commit()
-#             conn.close()
-#             return user_dict_list
-#     future = executor.submit(fetch_users_type_data)
-#     user_dict_list = future.result()
 
-#     # Check if there were any errors
-#     if error_list:
-#         return {"errors": error_list}
-  
-#     return {"user_type_detail ":user_dict_list}
+
 
 # Create user type
 @app.post("/Create_user_type", status_code=status.HTTP_201_CREATED)
@@ -200,60 +169,9 @@ def Create_Users(Users:Users):
     conn.close()
     return {"users ":users_dict_list}
 
-# @app.post("/User_SignIn", status_code=status.HTTP_201_CREATED)
-# def User_SignIn(Users: User_SignIn):
-#     error_list = []
-#     conn = sqlite3.connect('event_management.db', timeout=10)
-#     cursor = conn.cursor()
-#     try:
-#         # Retrieve all users from the database
-#         cursor.execute("SELECT * FROM `Users`")
-#         db_users = cursor.fetchall()
 
-#         for _user in db_users:
-#             if _user[4] == Users.email:
-#                 # Check the password
-#                 pass_code = hash_Password_check(Users.password, _user[6])
-#                 if not pass_code:
-#                     return {"user found": "invalid credentials"}
 
-#                 # Fetch the user information with descriptive fields
-#                 cursor.execute(f"""
-#                     SELECT u.user_id, u.first_name, u.last_name, u.business_name, u.email, 
-#                            u.active_status, u.password, u.location, u.contact, 
-#                            u.user_type_id, u.profile_type_id, ut.user_type, pt.profile_type
-#                     FROM Users u
-#                     LEFT JOIN User_Type ut ON u.user_type_id = ut.user_type_id
-#                     LEFT JOIN Profile_Type pt ON u.profile_type_id = pt.profile_type_id
-#                     WHERE u.user_id = {_user[0]}
-#                 """)
-#                 user_info = cursor.fetchone()
 
-#                 # Map results to descriptive keys
-#                 user_response = {
-#                     "user_id": user_info[0],
-#                     "first_name": user_info[1],
-#                     "last_name": user_info[2],
-#                     "business_name": user_info[3],
-#                     "email": user_info[4],
-#                     "active_status": user_info[5],
-#                     "password": user_info[6],
-#                     "location": user_info[7],
-#                     "contact": user_info[8],
-#                     "user_type_id": user_info[9],
-#                     "profile_type_id": user_info[10],
-#                     "user_type": user_info[11],
-#                     "profile_type": user_info[12]
-#                 }
-#                 return {"user found": user_response}
-
-#         # If no user was found with matching email
-#         return {"errors": "invalid credentials"}
-#     except Exception as e:
-#         error_list.append(f"An error occurred: {str(e)}")
-#         raise HTTPException(status_code=500, detail=error_list)
-#     finally:
-#         conn.close()
 
 @app.post("/User_SignIn", status_code=status.HTTP_201_CREATED)
 def User_SignIn(Users: User_SignIn):
@@ -436,19 +354,10 @@ def Create_profile_type(Profile_Type:Profile_Type):
    
     conn = sqlite3.connect('event_management.db', timeout=10) 
     cursor = conn.cursor()
-    # if Profile_Type.profile_type_id == 1:
-    #     Profile_Type.profile_type='Admin'
-    # elif Profile_Type.profile_type_id == 2:
-    #     Profile_Type.profile_type='Venue Provider'
-    # elif Profile_Type.profile_type_id == 3:
-    #     Profile_Type.profile_type='Catering Service Provider'
+    
         
     cursor.execute("""INSERT INTO `Profile_Type` (profile_type) VALUES (?) """,
-    (Profile_Type.profile_type,))    
-    #  cursor.execute('''INSERT OR IGNORE INTO Profile_Type (profile_type_id, profile_type) VALUES
-    #      (1, 'Admin'),                        -- Default profile for Admin
-    #      (2, 'Venue Provider'),               -- Default profile for Venue Provider
-    #      (3, 'Catering Service Provider')     -- Default profile for Catering Service Provider ''')
+    (Profile_Type.profile_type,))   
 
     conn.commit()
     res = cursor.execute(""" Select * from `Profile_Type` """)
@@ -485,36 +394,8 @@ def delete_profile_type(profile_type_id: int):
     
     return {"message": f"Profile type with ID {profile_type_id} has been deleted successfully."}
 
-# @app.get("/profile_type")
-# def profile_type():  
-#     error_list = []
-#     executor = ThreadPoolExecutor()
-#     def fetch_users_type_data():
-#         try:
-#             conn = sqlite3.connect('event_management.db', timeout=10) 
-#             cursor = conn.cursor()
-#             res = cursor.execute(""" Select * from `Profile_Type` """)
-#             res =cursor.fetchall();
-#             if not res:
-#                error_list.append("No users found in the database.")
-#             #raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
-#             keys = ['profile_type_id','profile_type']
-#             user_dict_list = [dict(zip(keys, item)) for item in res]
-#         except Exception as e:
-#             error_list.append(f"An error occurred: {str(e)}")
-#         #raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
-#         finally:
-#             conn.commit()
-#             conn.close()
-#             return user_dict_list
-#     future = executor.submit(fetch_users_type_data)
-#     user_dict_list = future.result()
 
-#     # Check if there were any errors
-#     if error_list:
-#         return {"errors": error_list}
-  
-#     return {"profile_type_detail ":user_dict_list}
+
 @app.get("/profile_type")
 def profile_type():  
     error_list = []
@@ -549,42 +430,7 @@ def profile_type():
   
     return {"profile_type_detail": profile_dict_list}
 
-# @app.post("/Create_profile",status_code=status.HTTP_201_CREATED)
-# def Create_Profile(Profile:Profile):
-   
-#     conn = sqlite3.connect('event_management.db', timeout=10) 
-#     cursor = conn.cursor()
-    
 
-#     # Check if profile_type_id exists in Profile_Type
-#     cursor.execute("SELECT COUNT(*) FROM Profile_Type WHERE profile_type_id = ?", (Profile.profile_type_id,))
-#     profile_type_exists = cursor.fetchone()[0]
-
-#     # Check if user_id exists in Users
-#     cursor.execute("SELECT COUNT(*) FROM Users WHERE user_id = ?", (Profile.user_id,))
-#     user_exists = cursor.fetchone()[0]
-
-#     # If either does not exist, raise an HTTPException
-#     if not profile_type_exists:
-#         conn.close()
-#         raise HTTPException(status_code=400, detail="Profile Type ID does not exist.")
-
-#     if not user_exists:
-#         conn.close()
-#         raise HTTPException(status_code=400, detail="User ID does not exist.")
-    
-#     cursor.execute("""INSERT INTO `Profile` (`company_name`, `contact_detail`,`experience`,`thumbnail_image`,`profile_type_id`,`user_id`) VALUES (?,?,?,?,?,?) """,
-#     (Profile.Company_Name,Profile.Contact_Detail,Profile.Experience,Profile.Thumbnail_Image,Profile.profile_type_id,Profile.user_id))    
-
-
-#     conn.commit()
-#     res = cursor.execute(""" Select * from `Profile` """)
-#     res =cursor.fetchall();
-#     keys = ['profile_id','company_name','contact_detail','experience','thumbnail_image','profile_type_id','user_id']
-#     Profile_dict_list = [dict(zip(keys, item)) for item in res]
-#     conn.commit()
-#     conn.close()
-#     return {"profiles ":Profile_dict_list}
 
 
 @app.post("/Create_profile", status_code=status.HTTP_201_CREATED)
@@ -695,6 +541,7 @@ async def profiles():
     future = executor.submit(fetch_users_type_data)
     profile_dict_list = future.result()
 
+    # Check if there were any errors
     if error_list:
         return {"errors": error_list}
   
@@ -773,7 +620,8 @@ def Users():
   
     return {"users ":users_dict_list}
 
-\
+
+
 
 @app.post("/Create_Package", status_code=status.HTTP_201_CREATED)
 def Create_Package(Package: Packages):
@@ -822,19 +670,17 @@ def Packages():
             profile_dict_list = [dict(zip(keys, item)) for item in res]
         except Exception as e:
             error_list.append(f"An error occurred: {str(e)}")
-        #raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
         finally:
             conn.commit()
             conn.close()
             return profile_dict_list
     future = executor.submit(fetch_Packages_data)
     Packages_dict_list = future.result()
-
-    # Check if there were any errors
     if error_list:
         return {"errors": error_list}
   
     return {"Packages ":Packages_dict_list}
+
 
 #Create Package_Details
 @app.post("/Create_Package_Details",status_code=status.HTTP_201_CREATED)
@@ -842,8 +688,6 @@ def Create_Package_Details(Package_Details:Package_Details):
    
     conn = sqlite3.connect('event_management.db', timeout=10) 
     cursor = conn.cursor()
-
-    # package_image_json = json.dumps(Package_Details.package_image)
     
     cursor.execute("""INSERT INTO `Package_Details` (`package_header_image`,`package_id`) VALUES (?,?) """,
     (Package_Details.package_header_image,Package_Details.package_id))    
@@ -853,13 +697,11 @@ def Create_Package_Details(Package_Details:Package_Details):
     new_package_dtl_id = cursor.lastrowid
     cursor.execute("SELECT * FROM Package_Details WHERE package_dtl_id = ?", (new_package_dtl_id,))
     result = cursor.fetchone()
-
-    # res = cursor.execute(""" Select * from `Package_Details` """)
-    # res =cursor.fetchall();
     keys = ['package_dtl_id','package_header_image','package_id']
     package_details_data = dict(zip(keys, result))
     conn.close()
     return {"Package_Details ":package_details_data}
+
 
 @app.get("/Package_Details", status_code=status.HTTP_200_OK)
 def get_package_details(user_id: int = Query(..., description="ID of the user to fetch packages for")):
@@ -871,11 +713,7 @@ def get_package_details(user_id: int = Query(..., description="ID of the user to
         # Fetch all packages created by the user
         cursor.execute("SELECT * FROM Packages WHERE user_id = ?", (user_id,))
         packages_results = cursor.fetchall()
-
-        # Initialize a dictionary to store package data grouped by package_id
         all_packages = {}
-
-        # Process each package
         for package in packages_results:
             package_id, package_name, package_price, price, user_id_db = package
             if package_id not in all_packages:
@@ -887,8 +725,6 @@ def get_package_details(user_id: int = Query(..., description="ID of the user to
                     "package_details": [],
                     "package_images": []
                 }
-
-            # Fetch data from Package_Details table for the current package_id
             cursor.execute("SELECT * FROM Package_Details WHERE package_id = ?", (package_id,))
             package_details_results = cursor.fetchall()
 
@@ -924,6 +760,8 @@ def get_package_details(user_id: int = Query(..., description="ID of the user to
     finally:
         # Close the database connection
         conn.close()
+
+    # Return the package data for the specified user_id, including the user_id in the response
     return {
         "user_id": user_id,
         "all_packages": list(all_packages.values())
@@ -951,23 +789,28 @@ def Package_images(image_data: Package_images):
         new_id = cursor.lastrowid  # Get the ID of the last inserted row
         cursor.execute('SELECT * FROM Package_images WHERE Package_image_id = ?', (new_id,))
         result = cursor.fetchone()
+
+        # Define keys to map to the columns in the table
         keys = ['Package_image_id', 'package_id', 'package_image', 'image_desc']
         package_image = dict(zip(keys, result))
 
     except Exception as e:
+        # Handle any exception that occurs
         conn.rollback()  # Rollback the transaction if there was an error
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
     finally:
+        # Close the database connection
         conn.close()
+
+    # Return the newly created Package_Details_images data
     return {"package_image": package_image}
-
-
 
 
 @app.get("/get_Package_images", status_code=status.HTTP_200_OK)
 def get_Package_images():
     try:
+        # Connect to the SQLite database
         conn = sqlite3.connect('event_management.db', timeout=10)
         cursor = conn.cursor()
 
@@ -980,77 +823,39 @@ def get_Package_images():
         package_images_list = [dict(zip(keys, result)) for result in results]
 
     except Exception as e:
+        # Handle any exception that occurs
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
     finally:
+        # Close the database connection
         conn.close()
+
+    # Return all Package_Details_images data
     return {"Package_images": package_images_list}
 
 
 
-
-
-
-# @app.post("/Create_Book_Event", status_code=status.HTTP_201_CREATED)
-# def Create_Book_Event(event: Events):
-#     conn = sqlite3.connect('event_management.db', timeout=10)
-#     cursor = conn.cursor()
-
-#     cursor.execute(
-#         """
-#         INSERT INTO Events (event_name, number_of_guests, package_id, start_date, end_date,user_id,profile_id,location)
-#         VALUES (?, ?, ?, ?, ?, ?,?,?)
-#         """,
-#         (event.event_name, event.number_of_guests, event.package_id, event.start_date.strftime("%Y-%m-%d"),event.end_date.strftime("%Y-%m-%d"), event.user_id,event.profile_id,event.location)
-#     )
-
-#     # Get the last inserted event ID
-#     event_id = cursor.lastrowid
-
-#     # Fetch only the newly created event
-#     cursor.execute("SELECT * FROM Events WHERE event_id = ?", (event_id,))
-#     row = cursor.fetchone()
-
-#     # Map the fetched row to a dictionary format
-#     keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id','profile_id','location','payment_status']
-#     created_event = dict(zip(keys, row))
-
-#     conn.commit()
-#     conn.close()
-
-#     return {"Event": created_event}
-
-
-
 @app.post("/Create_Book_Event", status_code=status.HTTP_201_CREATED)
-def create_book_event(event: Event):
+def Create_Book_Event(event: Events):
     conn = sqlite3.connect('event_management.db', timeout=10)
     cursor = conn.cursor()
 
-    # Check for conflicting event dates
+    # Insert the new event
     cursor.execute(
         """
-        SELECT COUNT(*) FROM Events
-        WHERE (start_date <= ? AND end_date >= ?) OR (start_date <= ? AND end_date >= ?)
+        INSERT INTO Events (event_name, number_of_guests, package_id, start_date, end_date,user_id,profile_id,location)
+        VALUES (?, ?, ?, ?, ?, ?,?,?)
         """,
-        (event.start_date, event.start_date, event.end_date, event.end_date)
-    )
-    if cursor.fetchone()[0] > 0:
-        conn.close()
-        raise HTTPException(status_code=400, detail="Selected date slot is already booked.")
-
-    cursor.execute(
-        """
-        INSERT INTO Events (event_name, number_of_guests, package_id, start_date, end_date, user_id, profile_id, location)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (event.event_name, event.number_of_guests, event.package_id, event.start_date, event.end_date, event.user_id, event.profile_id, event.location)
+        (event.event_name, event.number_of_guests, event.package_id, event.start_date.strftime("%Y-%m-%d"),event.end_date.strftime("%Y-%m-%d"), event.user_id,event.profile_id,event.location)
     )
 
     event_id = cursor.lastrowid
+
+    # Fetch only the newly created event
     cursor.execute("SELECT * FROM Events WHERE event_id = ?", (event_id,))
     row = cursor.fetchone()
 
-    keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id', 'profile_id', 'location', 'payment_status']
+    keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id','profile_id','location','payment_status']
     created_event = dict(zip(keys, row))
 
     conn.commit()
@@ -1059,24 +864,37 @@ def create_book_event(event: Event):
     return {"Event": created_event}
 
 
-
+#Get Book Event
 @app.get("/Book_Event")
-def get_booked_events():
-    conn = sqlite3.connect('event_management.db', timeout=10)
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Events")
-    res = cursor.fetchall()
-    conn.close()
+def Book_Event():  
+    error_list = []
+    executor = ThreadPoolExecutor()
+    def fetch_Book_Event_data():
+        try:
+            conn = sqlite3.connect('event_management.db', timeout=10) 
+            cursor = conn.cursor()
+            res = cursor.execute(""" Select * from `Events` """)
+            res =cursor.fetchall();
+            if not res:
+               error_list.append("No users found in the database.")
+            #raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not found")
+            keys = ['event_id','event_name','number_of_guests','package_id','start_date','end_date','user_id','profile_id','location','payment_status']
+            profile_dict_list = [dict(zip(keys, item)) for item in res]
+        except Exception as e:
+            error_list.append(f"An error occurred: {str(e)}")
+        #raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+        finally:
+            conn.commit()
+            conn.close()
+            return profile_dict_list
+    future = executor.submit(fetch_Book_Event_data)
+    Book_Event_dict_list = future.result()
 
-    if not res:
-        raise HTTPException(status_code=404, detail="No events found.")
-
-    keys = ['event_id', 'event_name', 'number_of_guests', 'package_id', 'start_date', 'end_date', 'user_id', 'profile_id', 'location', 'payment_status']
-    booked_events = [dict(zip(keys, item)) for item in res]
-
-    return {"Booked_Events": booked_events}
-
-
+    # Check if there were any errors
+    if error_list:
+        return {"errors": error_list}
+  
+    return {"Book_Events ":Book_Event_dict_list}
 
 
 @app.get("/Booked_Events/{user_id}")
@@ -1131,7 +949,6 @@ async def Booked_Events(user_id: int):
                 "events": []
             }
 
-            # Retrieve events associated with the profile_id
             events_query = '''
             SELECT event_id, event_name, number_of_guests, start_date, end_date, location, payment_status, user_id
             FROM Events
@@ -1151,8 +968,6 @@ async def Booked_Events(user_id: int):
                     "location": event[5],             # index 5 corresponds to location
                     "payment_status": event[6]        # index 6 corresponds to payment_status
                 }
-
-                # Fetch user details for the user_id from the event
                 user_id_from_event = event[7]  # index 7 corresponds to user_id from the event
                 user_query_for_event = '''
                 SELECT first_name, last_name, business_name, email, location, contact
@@ -1182,6 +997,8 @@ async def Booked_Events(user_id: int):
 
 
 
+
+
 @app.get("/checklist_of_events", status_code=status.HTTP_200_OK)
 def checklist_of_events(user_id: int = Query(..., description="ID of the user to fetch events for")):
     error_list = []
@@ -1192,9 +1009,7 @@ def checklist_of_events(user_id: int = Query(..., description="ID of the user to
         try:
             conn = sqlite3.connect('event_management.db', timeout=10)
             cursor = conn.cursor()
-            
-            # Fetch events for the specified user_id where payment_status is 'Pending'
-            # and include profile_id, company_name, and profile_type in the results
+
             cursor.execute("""
                 SELECT e.event_id, e.event_name, e.number_of_guests, e.package_id, e.start_date, e.end_date,
                        e.user_id, e.payment_status, e.profile_id, p.company_name, pt.profile_type
@@ -1251,12 +1066,9 @@ def create_payment(payment: Payments):
     new_payment_id = cursor.lastrowid
     cursor.execute("SELECT * FROM Payments WHERE payment_id = ?", (new_payment_id,))
     result = cursor.fetchone()
-
-    # Map the result to a dictionary
     keys = ['payment_id', 'payment_amount', 'payment_type', 'payment_status', 'event_id', 'package_id', 'user_id']
     payment_data = dict(zip(keys, result))
 
-    # Update the `payment_status` of the corresponding event to "Payment Transferred"
     cursor.execute("""
         UPDATE Events
         SET payment_status = 'Payment Transferred'
@@ -1267,6 +1079,8 @@ def create_payment(payment: Payments):
     conn.close()
 
     return {"Payment": payment_data}
+
+
 
 
 #Get Payments
@@ -1307,11 +1121,7 @@ def create_event(event: EventCreateRequest, user_id: int):
 
     conn = sqlite3.connect('event_management.db')
     cursor = conn.cursor()
-    # Check if the user is an event organizer by checking profile_type_id = 5 since ,i save event organizer in profile table as 5 
-    # Allow only if the profile_type_id is 5 (Event Organizer)
-    # if user_id != 5:
-    #     raise HTTPException(status_code=403, detail="Permission denied: User is not an event organizer")
-        # Verify the user's profile type to ensure they're an event organizer
+
     cursor.execute('SELECT profile_type_id FROM Users WHERE user_id = ?', (user_id,))
     result = cursor.fetchone()
     
@@ -1467,8 +1277,6 @@ async def select_bid(select_bid: SelectBidRequest):
     ''', (select_bid.bid_id,))
     
     conn.commit()
-
-    # Return the selected bid details
     selected_bid = {
         "bid_id": bid[0],  # Assuming bid_id is the first column in Mark_bidding
         "event_id": bid[1],  # Assuming event_id is the second column in Mark_bidding
@@ -1479,6 +1287,8 @@ async def select_bid(select_bid: SelectBidRequest):
     conn.close()
 
     return {"selected_bid": selected_bid}
+
+
 
 
 
@@ -1545,6 +1355,8 @@ def get_user_profile(user_id: int):
     if not user_info:
         return {"message": "User not found"}
     return {"user": user_info}
+
+
 
 @app.get("/packages_info/")
 def get_user_packages(user_id: int):
@@ -1616,7 +1428,6 @@ def get_profiles(profile_number: int = Query(..., description="Profile number (1
     conn.close()
 
     return {"profiles": profiles}
-
 
 
 
