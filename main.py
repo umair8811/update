@@ -111,6 +111,26 @@ def Update_user_type(update_user_type:User_Type):
     conn.close()
     return {"update_user_User_Type ":update_user_User_Type}
 
+@app.delete("/delete_user/{user_id}", status_code=200)
+def delete_user(user_id: int):
+    conn = sqlite3.connect('event_management.db', timeout=10)
+    cursor = conn.cursor()
+
+    # Check if the user exists
+    cursor.execute("SELECT * FROM Users WHERE user_id = ?", (user_id,))
+    user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    # Delete the user
+    cursor.execute("DELETE FROM Users WHERE user_id = ?", (user_id,))
+    conn.commit()
+    conn.close()
+
+    return {"message": f"User with ID {user_id} has been deleted successfully."}
+
 
 @app.post("/delete_User_Type", status_code=status.HTTP_201_CREATED)
 def delete_user_User_Type(delete_User_Type_id: int):
