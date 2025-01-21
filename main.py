@@ -2,6 +2,8 @@ from db_connection import *
 from functions import *
 from BaseModels import *
 from datetime import datetime 
+from models import Event  
+
 import json
 
 from fastapi import status,FastAPI,HTTPException,Depends,Query
